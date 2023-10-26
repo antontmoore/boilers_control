@@ -1,14 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-MAXIMUM_INSTANTANEOUS_POWER__W = 4_000.
-MAXIMUM_15MIN_POWER__W = 900.
-
-AMBIENT_TEMPERATURE__degC = 20.
-INCOMING_WATER_TEMPERATURE__degC = 10.
-SPECIFIC_HEAT_CAPACITY__J_per_kg_degC = 4_184.
-WATER_DENSITY__kg_per_m3 = 1000.
-TIME_STEP__sec = 60
+from constants import AMBIENT_TEMPERATURE__degC
+from constants import INCOMING_WATER_TEMPERATURE__degC
+from constants import SPECIFIC_HEAT_CAPACITY__J_per_kg_degC
+from constants import WATER_DENSITY__kg_per_m3
+from constants import TIME_STEP__sec
 
 
 class HouseWithBoiler:
@@ -18,7 +14,7 @@ class HouseWithBoiler:
                  heater_power__W: float = 2_000.,
                  boiler_capacity__m3: float = 80. * 0.001,
                  full_heating_time__sec: float = 2 * 3600 + 21 * 60,
-                 heat_loss_coefficient__W_per_degC: float = 5.,
+                 heat_loss_coefficient__W_per_degC: float = 2.2,
                  boiler_control_tolerance__degC: float = 0.5
                  ):
         self.setpoint__degC = setpoint__degC
@@ -125,7 +121,7 @@ def generate_timetables(timestep__sec):
     while current_time_sec <= 86400:
         if (
                 4 * 3600 <= current_time_sec <= 9 * 3600 or
-                15 * 3600 <= current_time_sec <= 20 * 3600
+                15 * 3600 <= current_time_sec <= 20.1 * 3600
         ):
             timetable[idx] = 1
         current_time_sec += timestep__sec

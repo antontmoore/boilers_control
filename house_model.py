@@ -93,6 +93,13 @@ class HouseWithBoiler:
 
         return temperature_ts
 
+    def set_current_temperature(self,
+                                temperature_value__degC):
+        self.current_temperature__C = temperature_value__degC
+
+    def get_current_temperature(self):
+        return self.current_temperature__C
+
 
 def calc_avg_consumption_and_price(timestep__sec):
 

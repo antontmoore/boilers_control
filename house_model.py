@@ -4,18 +4,20 @@ from constants import AMBIENT_TEMPERATURE__degC
 from constants import INCOMING_WATER_TEMPERATURE__degC
 from constants import SPECIFIC_HEAT_CAPACITY__J_per_kg_degC
 from constants import WATER_DENSITY__kg_per_m3
-from constants import TIME_STEP__sec
+from constants import DEFAULT_FULL_HEATING_TIME__sec
+from constants import DEFAULT_TIME_STEP__sec
+from constants import SETPOINT__degC
 
 
 class HouseWithBoiler:
     def __init__(self,
-                 setpoint__degC: float = 55.,
+                 setpoint__degC: float = SETPOINT__degC,
                  upper_limit__degC: float = 60.,
                  heater_power__W: float = 2_000.,
                  boiler_capacity__m3: float = 80. * 0.001,
-                 full_heating_time__sec: float = 2 * 3600 + 21 * 60,
-                 heat_loss_coefficient__W_per_degC: float = 2.2,
-                 boiler_control_tolerance__degC: float = 0.5
+                 full_heating_time__sec: float = DEFAULT_FULL_HEATING_TIME__sec,
+                 heat_loss_coefficient__W_per_degC: float = 0.,
+                 boiler_control_tolerance__degC: float = 0.2
                  ):
         self.setpoint__degC = setpoint__degC
         self.upper_limit__degC = upper_limit__degC
@@ -39,7 +41,8 @@ class HouseWithBoiler:
 
     def make_step(self,
                   out_consumption__m3_per_sec: float = 0.,
-                  boiler_is_on: bool = False):
+                  boiler_is_on: bool = False,
+                  time_step__sec: int = DEFAULT_TIME_STEP__sec):
         """
             Function to make one step in time and calculate new current temperature.
 
@@ -49,20 +52,20 @@ class HouseWithBoiler:
         """
 
         heat_loss_by_cooling__J = (
-                self.heat_loss_coefficient__W_per_degC * TIME_STEP__sec *
+                self.heat_loss_coefficient__W_per_degC * time_step__sec *
                 (self.current_temperature__C - AMBIENT_TEMPERATURE__degC)
         )
 
         heat_loss_by_flow__J = (
                 SPECIFIC_HEAT_CAPACITY__J_per_kg_degC *
-                WATER_DENSITY__kg_per_m3 * out_consumption__m3_per_sec * TIME_STEP__sec *
+                WATER_DENSITY__kg_per_m3 * out_consumption__m3_per_sec * time_step__sec *
                 (self.current_temperature__C - INCOMING_WATER_TEMPERATURE__degC)
         )
 
         heat_added_by_boiler__J = 0.
         if boiler_is_on:
             if self.current_temperature__C < self.setpoint__degC - self.boiler_control_tolerance__degC:
-                heat_added_by_boiler__J = self.heater_power__W * TIME_STEP__sec * self.efficiency
+                heat_added_by_boiler__J = self.heater_power__W * time_step__sec * self.efficiency
                 self.time_boiling += 1
 
         self.current_temperature__C += (
@@ -87,9 +90,9 @@ class HouseWithBoiler:
         for j in range(daily_consumption__m3_per_sec.shape[0]):
             boil = bool(timetable[j])
             water_consumption__m3_per_sec = daily_consumption__m3_per_sec[j]
-            self.make_step(water_consumption__m3_per_sec, boil)
+            self.make_step(water_consumption__m3_per_sec, boil, DEFAULT_TIME_STEP__sec)
             temperature_ts.append(self.current_temperature__C)
-            current_time += TIME_STEP__sec
+            current_time += DEFAULT_TIME_STEP__sec
 
         return temperature_ts
 
@@ -137,8 +140,8 @@ def generate_timetables(timestep__sec):
     return timetable
 
 
-avg_consumption__m3_per_sec = calc_avg_consumption_and_price(TIME_STEP__sec)
-timetable = generate_timetables(TIME_STEP__sec)
+avg_consumption__m3_per_sec = calc_avg_consumption_and_price(DEFAULT_TIME_STEP__sec)
+timetable = generate_timetables(DEFAULT_TIME_STEP__sec)
 
 
 if __name__ == "__main__":

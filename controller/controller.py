@@ -105,4 +105,5 @@ class Controller(ABC):
 
         for idx in range(trends.shape[1]):
             plt.plot(trends[:, idx])
+        plt.grid(True)
         plt.show()

@@ -40,10 +40,10 @@ class NaiiveController(Controller):
         self.horizon__steps = int(self.horizon_time__sec / DEFAULT_TIME_STEP__sec)
 
     def generate_control(self,
-                          start_temperatures__degC: NDArray,
-                          current_time__sec: int,
-                          step_size__sec: int
-                          ):
+                         start_temperatures__degC: NDArray,
+                         current_time__sec: int,
+                         step_size__sec: int
+                         ) -> NDArray:
         """
             Function generating control for the future time steps, starting from given temperatures.
 
@@ -73,7 +73,6 @@ class NaiiveController(Controller):
             start_temperatures__degC,
             step_size__sec
         )
-        heat_schedule_size__steps = heat_schedule.shape[0]
 
         if steps_to_setpoint < steps_to_surge:
             schedule = np.vstack((
@@ -83,12 +82,10 @@ class NaiiveController(Controller):
         else:
             schedule = heat_schedule
 
-        trends = self.simulate_schedule(start_temperatures__degC, schedule, step_size__sec)
-
-        self.plot_trends(trends)
+        return schedule
 
     @staticmethod
-    def calc_time_left_to_flow_growth(current_time__sec):
+    def calc_time_left_to_flow_growth(current_time__sec: int) -> int:
         """
             Calculates time left before water consumption.
             If water is consumed now, returns 0.
@@ -124,33 +121,48 @@ class NaiiveController(Controller):
         return int(min_time_before_growth)
 
     def calc_heat_schedule(self,
-                           current_temperatures__degC: float,
+                           current_temperatures__degC: NDArray,
                            step_size__sec: int,
+                           stop_at_setpoint=True,
                            ):
+        """
+            Function calculate the heat schedule for microgrid. It receives current temperatures and every timestep
+            heats the boiler with the lowest temperature.
 
+            :param current_temperatures__degC:
+            :param step_size__sec:
+            :return:
+        """
+
+        # we can simulteneously turn on n_simulteneous boilers
         n_simulteneous = int(self.max_instantaneous_power__W / self.heater_power__W)
+
+        # inside 15min period we can turn on boilers for this part of period
         heating_time_part = self.max_15min_power__W / (n_simulteneous * self.heater_power__W)
         if heating_time_part > 1.:      # no constraints
             heating_time_part = 1.
 
+        # time when n_simulteneous boilers are turned on
         heating_inside_15min__sec = int(15 * 60 * heating_time_part)
-        nonheating_inside_15min__sec = 15 * 60 - heating_inside_15min__sec
 
+        # convert time from sec to steps
         heating_inside_15min__steps = int(heating_inside_15min__sec / step_size__sec)
         nonheating_inside_15min__steps = int(15 * 60 / step_size__sec) - heating_inside_15min__steps
-        heat_to_all_relation = heating_inside_15min__steps / \
-                               (heating_inside_15min__steps + nonheating_inside_15min__steps)
 
-        # max_current_temperature__degC = np.max(current_temperatures__degC)
-        # temperature_differences__degC = max_current_temperature__degC - current_temperatures__degC
+        # part of heating time corresponding to all time (inside 15 min interval)
+        heat_to_all_relation = (
+                heating_inside_15min__steps /
+                (heating_inside_15min__steps + nonheating_inside_15min__steps)
+        )
+
+        # calc deltaT = current_temperature - setpoint for every boiler
         temperature_differences__degC = self.setpoint__degC - current_temperatures__degC
 
+        # convert deltaT to time needed to warm up (in sec and steps)
         time_to_setpoint__sec = self.temp_to_time__sec_per_degC * temperature_differences__degC
         steps_to_setpoint_by_house = np.ceil(time_to_setpoint__sec / step_size__sec).astype(int)
 
-        # calculate schedule to move to the max of current temperatures
-        schedule_length = int(np.sum(steps_to_setpoint_by_house) / heat_to_all_relation / n_simulteneous)
-        schedule = np.zeros((schedule_length, self.number_of_houses), dtype=bool)
+        # calculate schedule to go to setpoint and beyond
         schedule = np.zeros((self.horizon__steps, self.number_of_houses), dtype=bool)
 
         ids_and_steps = [[idx, steps_to_setpoint_by_house[idx]] for idx in range(self.number_of_houses)]
@@ -161,10 +173,9 @@ class NaiiveController(Controller):
         while step < self.horizon__steps:
             for j in range(n_simulteneous):
                 idx, steps_needed = ids_and_steps[j]
-                schedule[step: step + heating_inside_15min__steps, idx] = True
-                ids_and_steps[j][1] -= heating_inside_15min__steps
-                # if ids_and_steps[j][1] < 0:
-                #     ids_and_steps[j][1] = 0
+                heat_steps = min(steps_needed, heating_inside_15min__steps)
+                schedule[step: step + heat_steps, idx] = True
+                ids_and_steps[j][1] -= heat_steps
 
             step += heating_inside_15min__steps
             ids_and_steps.sort(key=lambda pair: -pair[1])

@@ -52,3 +52,19 @@ water_consumption__m3_per_sec = np.array([[0,         0.],
                                           [24 * 3600, 0.],
                                           ]
                                          )
+
+# given price of energy [time in sec from 00:00, price in usd/kWh]
+energy_price__usd_per_J = np.array([[0,         0.001],
+                                    [8 * 3600,  0.001],
+                                    [8 * 3600,  0.02],
+                                    [9 * 3600,  0.02],
+                                    [9 * 3600,  0.001],
+                                    [18 * 3600, 0.001],
+                                    [18 * 3600, 0.02],
+                                    [20 * 3600, 0.02],
+                                    [20 * 3600, 0.001],
+                                    [24 * 3600, 0.001],
+                                    ]
+                                   )
+J_in_kWh = 1000 * 3600
+energy_price__usd_per_J[:, 1] *= 100 / J_in_kWh

@@ -82,6 +82,7 @@ class NaiiveController(Controller):
         else:
             schedule = heat_schedule
 
+        schedule = schedule[:self.horizon__steps]
         return schedule
 
     @staticmethod

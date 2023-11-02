@@ -2,7 +2,7 @@ from abc import ABC
 import numpy as np
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
-from house_model import HouseWithBoiler
+from simulation.house_model import HouseWithBoiler
 from constants import MAXIMUM_INSTANTANEOUS_POWER__W
 from constants import MAXIMUM_15MIN_POWER__W
 from constants import SPECIFIC_HEAT_CAPACITY__J_per_kg_degC

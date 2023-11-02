@@ -51,6 +51,7 @@ class HouseWithBoiler:
             :return:                              None
         """
 
+        power_used_in_step__W = 0
         heat_loss_by_cooling__J = (
                 self.heat_loss_coefficient__W_per_degC * time_step__sec *
                 (self.current_temperature__C - AMBIENT_TEMPERATURE__degC)
@@ -66,6 +67,7 @@ class HouseWithBoiler:
         if boiler_is_on:
             if self.current_temperature__C < self.setpoint__degC - self.boiler_control_tolerance__degC:
                 heat_added_by_boiler__J = self.heater_power__W * time_step__sec * self.efficiency
+                power_used_in_step__W = self.heater_power__W
                 self.time_boiling += 1
 
         self.current_temperature__C += (
@@ -73,6 +75,8 @@ class HouseWithBoiler:
                 SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
                 self.water_mass__kg
         )
+
+        return power_used_in_step__W
 
     def simulate_day(self,
                      timetable,

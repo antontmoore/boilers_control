@@ -1,4 +1,4 @@
-from controller import controller
+from controller.controller import Controller
 from numpy.typing import NDArray
 import numpy as np
 from .house_model import HouseWithBoiler
@@ -31,14 +31,14 @@ class Simulator:
         self.real_houses = []
 
     def simulate_day(self,
-                     controller: controller,
+                     controller: Controller,
                      setpoint__degC: float,
                      timestep__sec: int,
                      start_temperatures__degC: NDArray):
 
         # creating the model of real houses
         self.real_houses = [HouseWithBoiler(setpoint__degC=setpoint__degC)
-                        for _ in range(self.number_of_houses)]
+                            for _ in range(self.number_of_houses)]
 
         # setting current temperatures
         [self.real_houses[h].set_current_temperature(start_temperatures__degC[h])
@@ -62,13 +62,13 @@ class Simulator:
                                                         water_consumption__m3_per_sec[:, 0],
                                                         water_consumption__m3_per_sec[:, 1])
             current_price__usd_per_J = np.interp(current_time__sec,
-                                           energy_price__usd_per_J[:, 0],
-                                           energy_price__usd_per_J[:, 1])
+                                                 energy_price__usd_per_J[:, 0],
+                                                 energy_price__usd_per_J[:, 1])
 
             for hn in range(self.number_of_houses):
                 power_used__W = self.real_houses[hn].make_step(current_consumption__m3_per_sec,
-                                                          schedule[0, hn],
-                                                          timestep__sec)
+                                                               schedule[0, hn],
+                                                               timestep__sec)
 
                 # save to results
                 result.temperature_trends[period, hn] = self.real_houses[hn].get_current_temperature()

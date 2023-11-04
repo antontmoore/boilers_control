@@ -95,6 +95,22 @@ class Controller(ABC):
 
         return temperature_trends__degC
 
+    def generate_control(self,
+                         start_temperatures__degC: NDArray,
+                         current_time__sec: int,
+                         step_size__sec: int
+                         ):
+        """
+            Function generating control for the future time steps, starting from given temperatures.
+
+            :param   start_temperatures__degC:    temperature at every boiler          [number_of_houses]
+            :param   current_time__sec:           current time from 00:00 in seconds
+            :param   step_size__sec:              step size for control generation
+
+            :return: control                      control actions for all houses       [horizon_steps, number_of_houses]
+        """
+        pass
+
     @staticmethod
     def plot_trends(trends: NDArray):
         """

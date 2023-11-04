@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import Union
+from numpy.typing import NDArray
 from constants import AMBIENT_TEMPERATURE__degC
 from constants import INCOMING_WATER_TEMPERATURE__degC
 from constants import SPECIFIC_HEAT_CAPACITY__J_per_kg_degC
@@ -40,7 +42,7 @@ class HouseWithBoiler:
         self.time_boiling = 0
 
     def make_step(self,
-                  out_consumption__m3_per_sec: float = 0.,
+                  out_consumption__m3_per_sec: Union[float, NDArray] = 0.,
                   boiler_is_on: bool = False,
                   time_step__sec: int = DEFAULT_TIME_STEP__sec):
         """

@@ -35,6 +35,8 @@ class AlwaysOnController(Controller):
         self.horizon__steps = int(self.horizon_time__sec / DEFAULT_TIME_STEP__sec)
 
     def generate_control(self,
+                         start_temperatures__degC: NDArray,
+                         current_time__sec: int,
                          step_size__sec: int
                          ) -> NDArray:
         """

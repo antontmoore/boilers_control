@@ -4,6 +4,7 @@ import numpy as np
 from .house_model import HouseWithBoiler
 from constants import water_consumption__m3_per_sec
 from constants import energy_price__usd_per_J
+from math import ceil
 
 
 class SimulationResults:
@@ -34,6 +35,7 @@ class Simulator:
                      controller: Controller,
                      setpoint__degC: float,
                      timestep__sec: int,
+                     period__sec: int,
                      start_temperatures__degC: NDArray):
 
         # creating the model of real houses
@@ -44,10 +46,11 @@ class Simulator:
         [self.real_houses[h].set_current_temperature(start_temperatures__degC[h])
          for h in range(self.number_of_houses)]
 
-        periods_to_model = int(24 * 3600 / timestep__sec)
+        periods_to_model = ceil(24 * 3600 / period__sec)
+        steps_inside_period = int(period__sec/ timestep__sec)
         array_for_avg = np.zeros((int(15 * 60 / timestep__sec),))
         avg_pointer = 0
-        result = SimulationResults(periods_to_model)
+        result = SimulationResults(periods_to_model * period__sec)
 
         current_time__sec = 0
         for period in range(periods_to_model):
@@ -57,32 +60,37 @@ class Simulator:
                 current_time__sec=current_time__sec,
                 step_size__sec=timestep__sec
             )
+            for j in range(steps_inside_period):
 
-            current_consumption__m3_per_sec = np.interp(current_time__sec,
-                                                        water_consumption__m3_per_sec[:, 0],
-                                                        water_consumption__m3_per_sec[:, 1])
-            current_price__usd_per_J = np.interp(current_time__sec,
-                                                 energy_price__usd_per_J[:, 0],
-                                                 energy_price__usd_per_J[:, 1])
+                index_to_save = period * steps_inside_period + j
+                temperatures__degC = np.array([house.get_current_temperature() for house in self.real_houses])
 
-            for hn in range(self.number_of_houses):
-                power_used__W = self.real_houses[hn].make_step(current_consumption__m3_per_sec,
-                                                               schedule[0, hn],
-                                                               timestep__sec)
 
-                # save to results
-                result.temperature_trends[period, hn] = self.real_houses[hn].get_current_temperature()
-                result.power_trend[period] += power_used__W
+                current_consumption__m3_per_sec = np.interp(current_time__sec,
+                                                            water_consumption__m3_per_sec[:, 0],
+                                                            water_consumption__m3_per_sec[:, 1])
+                current_price__usd_per_J = np.interp(current_time__sec,
+                                                     energy_price__usd_per_J[:, 0],
+                                                     energy_price__usd_per_J[:, 1])
 
-            # calculate average
-            array_for_avg[avg_pointer] = result.power_trend[period]
-            result.avg_power_trend[period] = np.mean(array_for_avg)
-            avg_pointer = (avg_pointer + 1) % array_for_avg.shape[0]
+                for hn in range(self.number_of_houses):
+                    power_used__W = self.real_houses[hn].make_step(current_consumption__m3_per_sec,
+                                                                   schedule[j, hn],
+                                                                   timestep__sec)
 
-            result.cost_trend[period] = current_price__usd_per_J * result.power_trend[period] * timestep__sec
-            current_time__sec += timestep__sec
+                    # save to results
+                    result.temperature_trends[index_to_save, hn] = self.real_houses[hn].get_current_temperature()
+                    result.power_trend[index_to_save] += power_used__W
+
+                # calculate average
+                array_for_avg[avg_pointer] = result.power_trend[index_to_save]
+                result.avg_power_trend[index_to_save] = np.mean(array_for_avg)
+                avg_pointer = (avg_pointer + 1) % array_for_avg.shape[0]
+
+                result.cost_trend[index_to_save] = current_price__usd_per_J * result.power_trend[index_to_save] * timestep__sec
+                current_time__sec += timestep__sec
 
         result.total_costs__usd = np.sum(result.cost_trend)
         result.total_energy__J = np.sum(result.power_trend) * timestep__sec
-
+        print('------ simulation is done -------')
         return result

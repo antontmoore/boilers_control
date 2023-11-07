@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 class NaiiveController(Controller):
     """
         Naiive controller.
-        Calculate aprroximate time needed to got to setpoint.
+        Calculate aprroximate time needed to go to setpoint.
         Splits work periods into pieces for each house.
         It boils only before consumption starts.
     """

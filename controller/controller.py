@@ -7,6 +7,7 @@ from constants import MAXIMUM_INSTANTANEOUS_POWER__W
 from constants import MAXIMUM_15MIN_POWER__W
 from constants import SPECIFIC_HEAT_CAPACITY__J_per_kg_degC
 from constants import SETPOINT__degC
+from constants import DEFAULT_TIME_STEP__sec
 from constants import DEFAULT_CONTROL_HORIZON__sec
 from constants import DEFAULT_HEATER_POWER__W
 from constants import DEFAULT_BOILER_CAPACITY__m3
@@ -99,7 +100,7 @@ class Controller(ABC):
                          start_temperatures__degC: NDArray,
                          current_time__sec: int,
                          step_size__sec: int
-                         ):
+                         ) -> NDArray:
         """
             Function generating control for the future time steps, starting from given temperatures.
 

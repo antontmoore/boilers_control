@@ -8,6 +8,10 @@ from constants import DEFAULT_HEATER_POWER__W
 from constants import DEFAULT_BOILER_CAPACITY__m3
 from constants import SURGE_CONSUMPTION_THRESHOLD__M_PER_SEC
 from constants import DEFAULT_TIME_STEP__sec
+from constants import DEFAULT_SIMULATION_PERIOD__sec
+from constants import DEFAULT_CONTROL_HORIZON__sec
+from constants import WATER_DENSITY__kg_per_m3
+from constants import INCOMING_WATER_TEMPERATURE__degC
 from constants import water_consumption__m3_per_sec
 from numpy.typing import NDArray
 
@@ -22,7 +26,7 @@ class NaiiveController(Controller):
 
     def __init__(self,
                  number_of_houses: int = 5,
-                 horizon_time__sec: int = 3 * 3600,
+                 horizon_time__sec: int = DEFAULT_CONTROL_HORIZON__sec,
                  setpoint__degC: float = SETPOINT__degC,
                  max_instantaneous_power__W: float = MAXIMUM_INSTANTANEOUS_POWER__W,
                  max_15min_power__W: float = MAXIMUM_15MIN_POWER__W,
@@ -42,7 +46,7 @@ class NaiiveController(Controller):
     def generate_control(self,
                          start_temperatures__degC: NDArray,
                          current_time__sec: int,
-                         step_size__sec: int
+                         step_size__sec: int,
                          ) -> NDArray:
         """
             Function generating control for the future time steps, starting from given temperatures.

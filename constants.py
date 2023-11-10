@@ -18,6 +18,9 @@ MAXIMUM_15MIN_POWER__W = 900.
 # ambient temperature outside the boiler
 AMBIENT_TEMPERATURE__degC = 20.
 
+# default value for start water temperatures
+DEFAULT_START_TEMPERATURE__degC = 48.
+
 # default horizon of modelling while generating control
 DEFAULT_CONTROL_HORIZON__sec = 3 * 3600
 

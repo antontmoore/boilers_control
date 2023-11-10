@@ -13,6 +13,8 @@ from constants import SETPOINT__degC
 from constants import MAXIMUM_INSTANTANEOUS_POWER__W
 from constants import MAXIMUM_15MIN_POWER__W
 from constants import DEFAULT_CONTROL_HORIZON__sec
+from constants import DEFAULT_SIMULATION_PERIOD__sec
+from constants import DEFAULT_START_TEMPERATURE__degC
 from constants import DEFAULT_TIME_STEP__sec
 import datetime
 
@@ -162,13 +164,13 @@ def get_settings_panel():
                        }, value=MAXIMUM_INSTANTANEOUS_POWER__W, className="dbc", id="max_power_slider"),
             html.P(),
             dbc.Label("Max total avg 15min power", color="light"),
-            dcc.Slider(800, 1200, step=100,
+            dcc.Slider(800, 1600, step=100,
                        marks={
                            800: {'label': '0.8kW'},
-                           900: {'label': '0.9kW'},
                            1000: {'label': '1kW'},
-                           1100: {'label': '1.1kW'},
                            1200: {'label': '1.2kW'},
+                           1400: {'label': '1.4kW'},
+                           1600: {'label': '1.6kW'},
                        }, value=MAXIMUM_15MIN_POWER__W, id="max_avg_power_slider"),
             html.P(),
             html.Div(
@@ -199,23 +201,23 @@ def get_settings_panel():
             dbc.Label("Start temperatures, °C", color="light"),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 1"),
-                 dbc.Input(placeholder="Temperature in °C...", value=45, id="house1_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house1_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 2"),
-                 dbc.Input(placeholder="Temperature in °C...", value=45, id="house2_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house2_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 3"),
-                 dbc.Input(placeholder="Temperature in °C...", value=45, id="house3_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house3_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 4"),
-                 dbc.Input(placeholder="Temperature in °C...", value=45, id="house4_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house4_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 5"),
-                 dbc.Input(placeholder="Temperature in °C...", value=45, id="house5_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house5_temperature")], className="mb-3",
             ),
         ]
     )
@@ -242,7 +244,8 @@ horizon__sec = DEFAULT_CONTROL_HORIZON__sec
 setpoint__degC = SETPOINT__degC
 max_instantaneous_power__W = MAXIMUM_INSTANTANEOUS_POWER__W
 max_15min_power__W = MAXIMUM_15MIN_POWER__W
-simulation_period__sec = 3600
+simulation_period__sec = DEFAULT_SIMULATION_PERIOD__sec
+start_temperatures__degC = DEFAULT_START_TEMPERATURE__degC * np.ones((5,))
 
 naiive_controller = NaiiveController(
     horizon_time__sec=horizon__sec,
@@ -261,12 +264,12 @@ result = simulator.simulate_day(controller=naiive_controller,
                                 setpoint__degC=setpoint__degC,
                                 timestep__sec=step_size__sec,
                                 period__sec=simulation_period__sec,
-                                start_temperatures__degC=25*np.ones((5,)))
+                                start_temperatures__degC=start_temperatures__degC)
 always_on_result = simulator.simulate_day(controller=always_on_controller,
                                           setpoint__degC=setpoint__degC,
                                           timestep__sec=step_size__sec,
-                                          period__sec=horizon__sec,
-                                          start_temperatures__degC=25*np.ones((5,)))
+                                          period__sec=simulation_period__sec,
+                                          start_temperatures__degC=start_temperatures__degC)
 
 figure_temperature, figure_power, figure_cost = get_figures(result)
 results_table = get_results_table(result, always_on_result)

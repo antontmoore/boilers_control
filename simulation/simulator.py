@@ -58,7 +58,7 @@ class Simulator:
             schedule = controller.generate_control(
                 start_temperatures__degC=temperatures__degC,
                 current_time__sec=current_time__sec,
-                step_size__sec=timestep__sec
+                step_size__sec=timestep__sec,
             )
             for j in range(steps_inside_period):
 

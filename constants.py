@@ -24,6 +24,9 @@ DEFAULT_START_TEMPERATURE__degC = 48.
 # default horizon of modelling while generating control
 DEFAULT_CONTROL_HORIZON__sec = 3 * 3600
 
+# default period to split the day of simulation
+DEFAULT_SIMULATION_PERIOD__sec = 3600
+
 # full time for boiler to heat from incoming water temperature to set point
 DEFAULT_FULL_HEATING_TIME__sec = 2 * 3600 + 30 * 60
 

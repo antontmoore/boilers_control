@@ -3,6 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 from simulation.house_model import HouseWithBoiler
+from .utils import CircularBuffer
 from constants import MAXIMUM_INSTANTANEOUS_POWER__W
 from constants import MAXIMUM_15MIN_POWER__W
 from constants import SPECIFIC_HEAT_CAPACITY__J_per_kg_degC
@@ -63,6 +64,8 @@ class Controller(ABC):
                 SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * water_mass_in_boiler__kg /
                 (self.heater_power__W * self.model[0].efficiency)
         )
+
+        self.last_15min_energy__J = CircularBuffer(int(15 * 60 / DEFAULT_TIME_STEP__sec))
 
     def simulate_schedule(self,
                           start_temperatures__degC: NDArray,

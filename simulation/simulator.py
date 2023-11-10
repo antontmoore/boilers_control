@@ -4,6 +4,7 @@ import numpy as np
 from .house_model import HouseWithBoiler
 from constants import water_consumption__m3_per_sec
 from constants import energy_price__usd_per_J
+from controller.utils import CircularBuffer
 from math import ceil
 
 
@@ -47,14 +48,16 @@ class Simulator:
          for h in range(self.number_of_houses)]
 
         periods_to_model = ceil(24 * 3600 / period__sec)
-        steps_inside_period = int(period__sec/ timestep__sec)
-        array_for_avg = np.zeros((int(15 * 60 / timestep__sec),))
-        avg_pointer = 0
+        steps_inside_period = int(period__sec / timestep__sec)
+        last_15min_power__W = CircularBuffer(int(15 * 60 / timestep__sec))
+
         result = SimulationResults(periods_to_model * period__sec)
 
         current_time__sec = 0
         for period in range(periods_to_model):
             temperatures__degC = np.array([house.get_current_temperature() for house in self.real_houses])
+
+            controller.last_15min_energy__J.put_data(last_15min_power__W.data * timestep__sec)
             schedule = controller.generate_control(
                 start_temperatures__degC=temperatures__degC,
                 current_time__sec=current_time__sec,
@@ -83,9 +86,8 @@ class Simulator:
                     result.power_trend[index_to_save] += power_used__W
 
                 # calculate average
-                array_for_avg[avg_pointer] = result.power_trend[index_to_save]
-                result.avg_power_trend[index_to_save] = np.mean(array_for_avg)
-                avg_pointer = (avg_pointer + 1) % array_for_avg.shape[0]
+                last_15min_power__W.add(result.power_trend[index_to_save])
+                result.avg_power_trend[index_to_save] = last_15min_power__W.current_mean()
 
                 result.cost_trend[index_to_save] = current_price__usd_per_J * result.power_trend[index_to_save] * timestep__sec
                 current_time__sec += timestep__sec

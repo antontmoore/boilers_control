@@ -31,7 +31,7 @@ DEFAULT_SIMULATION_PERIOD__sec = 3600
 DEFAULT_FULL_HEATING_TIME__sec = 2 * 3600 + 30 * 60
 
 # water temperature coming inside boiler to be heated
-INCOMING_WATER_TEMPERATURE__degC = 10.
+INCOMING_WATER_TEMPERATURE__degC = 20.
 
 # table value of specific heat capacity for water
 SPECIFIC_HEAT_CAPACITY__J_per_kg_degC = 4_184.

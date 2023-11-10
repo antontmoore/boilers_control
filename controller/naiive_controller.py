@@ -58,25 +58,58 @@ class NaiiveController(Controller):
             :return: control                      control actions for all houses       [horizon_steps, number_of_houses]
         """
 
+        timestamps__sec = np.linspace(0, self.horizon_time__sec, self.horizon__steps) + current_time__sec
+        horizon_consumption__m3_per_sec = np.interp(timestamps__sec,
+                                                    water_consumption__m3_per_sec[:, 0],
+                                                    water_consumption__m3_per_sec[:, 1])
+
+        current_temperatures__degC = np.array([t for t in start_temperatures__degC])
+        mean_temperature__degC = np.mean(current_temperatures__degC)
         self.horizon__steps = int(self.horizon_time__sec / step_size__sec)
-        time_to_surge__sec = self.calc_time_left_to_flow_growth(current_time__sec)
-        steps_to_surge = int(time_to_surge__sec / step_size__sec)
+        one_heater_energy__J = self.heater_power__W * self.model[0].efficiency * step_size__sec
 
-        max_power__W = min(self.max_15min_power__W, self.max_instantaneous_power__W)
-        max_energy_left__J = max_power__W * time_to_surge__sec
+        max_allowable_energy_15min__J = 15 * 60 * self.max_15min_power__W
+        if self.last_15min_energy__J.size != int(15 * 60 / step_size__sec):
+            self.last_15min_energy__J = CircularBuffer(int(15 * 60 / step_size__sec))
 
-        max_final_temperature__degC = (
-                (1 / self.number_of_houses) *
-                (sum(start_temperatures__degC) +
-                 max_energy_left__J / SPECIFIC_HEAT_CAPACITY__J_per_kg_degC / self.total_water_mass__kg
-                 )
-        )
+        mean_heat_schedule = np.zeros((self.horizon__steps,), dtype=int)
 
-        # if we start to heat right now
-        heat_schedule, steps_to_setpoint = self.calc_heat_schedule(
-            start_temperatures__degC,
-            step_size__sec
-        )
+        for step in range(self.horizon__steps):
+            step_consumption__kg = (
+                    horizon_consumption__m3_per_sec[step] * step_size__sec * WATER_DENSITY__kg_per_m3 *
+                    self.number_of_houses
+            )
+
+            still_have_energy__J = min(
+                max_allowable_energy_15min__J - self.last_15min_energy__J.sum_except_oldest(),
+                self.max_instantaneous_power__W * step_size__sec)
+
+            can_be_heated = sum(current_temperatures__degC < self.setpoint__degC)
+
+            energy_consumed_in_step__J = 0.
+            while still_have_energy__J >= one_heater_energy__J and \
+                    mean_temperature__degC < self.setpoint__degC and \
+                    mean_heat_schedule[step] < can_be_heated:
+                mean_heat_schedule[step] += 1
+                energy_consumed_in_step__J += self.heater_power__W * step_size__sec
+                still_have_energy__J -= energy_consumed_in_step__J
+
+                idx = np.argmin(current_temperatures__degC)
+                current_temperatures__degC[idx] = (
+                        current_temperatures__degC[idx] +
+                        one_heater_energy__J /
+                        (SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * self.boiler_capacity__m3 * WATER_DENSITY__kg_per_m3) +
+                        step_consumption__kg / self.total_water_mass__kg *
+                        (INCOMING_WATER_TEMPERATURE__degC - current_temperatures__degC[idx])
+                )
+
+            mean_temperature__degC = np.mean(current_temperatures__degC)
+
+            self.last_15min_energy__J.add(energy_consumed_in_step__J)
+
+        schedule = self.calc_heat_schedule_from_mean_schedule(mean_heat_schedule,
+                                                              start_temperatures__degC,
+                                                              step_size__sec)
 
         return schedule
 

@@ -127,3 +127,43 @@ class Controller(ABC):
             plt.plot(trends[:, idx])
         plt.grid(True)
         plt.show()
+
+
+    def calc_heat_schedule_from_mean_schedule(
+            self,
+            mean_schedule: NDArray,
+            current_temperatures__degC: NDArray,
+            step_size__sec: int,
+    ) -> NDArray:
+
+        """
+            Function calculate the heat schedule for all the houses, given the mean_schedule and start temperatures.
+            Every timestep it heats the boiler(s) with the lowest temperature.
+
+            :param mean_schedule:               amount of boilers to heat at the step k       [number_of_time_steps,]
+            :param current_temperatures__degC:  temperarutures we start with in every boiler  [number_of_houses,]
+            :param step_size__sec:              size of time step in seconds
+            :return:
+        """
+
+        schedule = np.zeros((self.horizon__steps, self.number_of_houses), dtype=bool)
+
+        adding_temperature_in_one_step__degC = (
+                self.model[0].heater_power__W * self.model[0].efficiency * step_size__sec /
+                SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
+                (self.model[0].water_mass__kg)
+        )
+
+        ids_and_temps = [(idx, current_temperatures__degC[idx]) for idx in range(self.number_of_houses)]
+        temperatures__degC = current_temperatures__degC
+        for timestep in range(mean_schedule.shape[0]):
+            for j in range(mean_schedule[timestep]):
+
+                min_temp_idx = np.argmin(temperatures__degC)
+                min_temp = temperatures__degC[min_temp_idx]
+
+                if min_temp < self.setpoint__degC:
+                    temperatures__degC[min_temp_idx] += adding_temperature_in_one_step__degC
+                    schedule[timestep, min_temp_idx] = True
+
+        return schedule

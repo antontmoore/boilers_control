@@ -22,7 +22,7 @@ AMBIENT_TEMPERATURE__degC = 20.
 DEFAULT_START_TEMPERATURE__degC = 48.
 
 # default horizon of modelling while generating control
-DEFAULT_CONTROL_HORIZON__sec = 3 * 3600
+DEFAULT_CONTROL_HORIZON__sec = 12 * 3600
 
 # default period to split the day of simulation
 DEFAULT_SIMULATION_PERIOD__sec = 3600

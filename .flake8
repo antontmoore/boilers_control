@@ -1,0 +1,18 @@
+[flake8]
+max-line-length = 120
+# F401: module imported but unused
+# E402: module level import not at top of file
+# E203 whitespace before ':'
+# C901 ...exprt... is too complex
+# W504 line break after binary operator
+# E127 continuation line over-indented for visual indent
+# C901 function is too complex
+# E201 whitespace after '['
+# E241 multiple spaces after ','
+
+ignore = F401,E402,E203,W504,E127,C901,E201,E241
+#format = ${cyan}%(path)s${reset}:${yellow_bold}%(row)d${reset}:${green_bold}%(col)d${reset}: ${red_bold}%(code)s${reset} %(text)s
+max-complexity = 15
+
+exclude =
+    .venv

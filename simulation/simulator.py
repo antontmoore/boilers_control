@@ -68,7 +68,6 @@ class Simulator:
                 index_to_save = period * steps_inside_period + j
                 temperatures__degC = np.array([house.get_current_temperature() for house in self.real_houses])
 
-
                 current_consumption__m3_per_sec = np.interp(current_time__sec,
                                                             water_consumption__m3_per_sec[:, 0],
                                                             water_consumption__m3_per_sec[:, 1])
@@ -89,7 +88,8 @@ class Simulator:
                 last_15min_power__W.add(result.power_trend[index_to_save])
                 result.avg_power_trend[index_to_save] = last_15min_power__W.current_mean()
 
-                result.cost_trend[index_to_save] = current_price__usd_per_J * result.power_trend[index_to_save] * timestep__sec
+                result.cost_trend[index_to_save] = \
+                    current_price__usd_per_J * result.power_trend[index_to_save] * timestep__sec
                 current_time__sec += timestep__sec
 
         result.total_costs__usd = np.sum(result.cost_trend)

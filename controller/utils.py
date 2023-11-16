@@ -13,7 +13,6 @@ class CircularBuffer:
         self.current_mean_value = 0.
         self.current_sum_value = 0.
 
-
     def add(self, element):
         self.data[self.index] = element
         self.index = (self.index + 1) % self.size
@@ -35,4 +34,3 @@ class CircularBuffer:
         self.index = 0
         self.current_mean_value = np.mean(self.data)
         self.current_sum_value = np.sum(self.data)
-

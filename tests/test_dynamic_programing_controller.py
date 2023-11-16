@@ -8,6 +8,7 @@ test_data = [
     (14 * 3600, 6 * 3600, 300, np.array([54., 55., 55., 55., 55.]),   np.array([18, 18, 18, 18, 18]))
 ]
 
+
 @pytest.mark.parametrize('horizon_time__sec,current_time__sec,step_size__sec,start_temperatures__degC,schedule_sum',
                          test_data)
 def test_dynamic_programming_controller(

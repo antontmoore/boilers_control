@@ -88,13 +88,13 @@ class DynamicProgramingController(Controller):
                 :return: array of values corresponfing to every 15 min period inside horizon
             """
 
-            x = np.hstack((x, x + 24*3600))
+            x = np.hstack((x, x + 24 * 3600))
             y = np.hstack((y, y))
             timestamps__sec = np.linspace(0, self.horizon_time__sec, self.horizon_time__sec + 1) + current_time__sec
             detailed_values = np.interp(timestamps__sec, x, y)
             result = np.zeros((int(self.horizon_time__sec / period_15min__sec),))
             for j in range(result.shape[0]):
-                result[j] = np.sum(detailed_values[j * period_15min__sec: (j+1)*period_15min__sec])
+                result[j] = np.sum(detailed_values[j * period_15min__sec: (j + 1) * period_15min__sec])
 
             return result
 
@@ -128,8 +128,11 @@ class DynamicProgramingController(Controller):
         temperature_step__degC = (self.setpoint__degC - minimum_temperature__degC) / (number_of_temp_steps - 1)
 
         # functions to set correspondings between temperature and row inside dp-table
-        idx_to_temp = lambda idx: minimum_temperature__degC + idx * temperature_step__degC
-        temp_to_idx = lambda t: int(round((t - minimum_temperature__degC) / temperature_step__degC))
+        def idx_to_temp(idx):
+            return minimum_temperature__degC + idx * temperature_step__degC
+
+        def temp_to_idx(t):
+            return int(round((t - minimum_temperature__degC) / temperature_step__degC))
 
         # intialize dp-table and auxilary tables
         dp_value = 1e9 * np.ones((number_of_temp_steps, self.horizon_periods + 1))
@@ -181,7 +184,7 @@ class DynamicProgramingController(Controller):
         heating_mean_schedule = np.zeros((self.horizon_periods + 1,), dtype=int)
 
         idx = np.argmin(dp_value[:, -1])
-        for col in range(dp_value.shape[1]-1, -1, -1):
+        for col in range(dp_value.shape[1] - 1, -1, -1):
             heating_mean_schedule[col] = boilers_switched_on[idx, col]
             idx = came_from[idx, col]
 
@@ -207,9 +210,9 @@ class DynamicProgramingController(Controller):
 
         # the difference of temperatures added by one switched on
         add_temperature_in_one_step__degC = (
-                self.model[0].heater_power__W * self.model[0].efficiency * step_size__sec /
-                SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
-                (self.model[0].water_mass__kg)
+            self.model[0].heater_power__W * self.model[0].efficiency * step_size__sec /
+            SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
+            (self.model[0].water_mass__kg)
         )
 
         schedule = np.zeros((0, self.number_of_houses), dtype=bool)

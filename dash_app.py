@@ -85,7 +85,7 @@ def get_figures(sim_result):
 
     fig_temp_dict = dict(zip(["data", "layout", "frames"], [[], {}, []]))
     fig_temp_dict["data"] = [go.Scatter(x=timestamps__hm, y=sim_result.temperature_trends[:, hn],
-                                        name="house "+str(hn+1)) for hn in range(5)]
+                                        name="house " + str(hn + 1)) for hn in range(5)]
     fig_temp_dict["layout"]["margin"] = dict(l=0, r=0, b=1, t=0)
     figure_temperature = go.Figure(fig_temp_dict)
     figure_temperature.update_yaxes(title_text="Temperature, °C")
@@ -146,12 +146,12 @@ def get_settings_panel():
             dbc.Label("Temperature setpoint", color="light"),
             dcc.Slider(40, 60, step=1,
                        marks={
-                                40: {'label': '40°C'},
-                                45: {'label': '45°C'},
-                                50: {'label': '50°C'},
-                                55: {'label': '55°C'},
-                                60: {'label': '60°C'},
-                        }, value=SETPOINT__degC, id="setpoint_slider"),
+                           40: {'label': '40°C'},
+                           45: {'label': '45°C'},
+                           50: {'label': '50°C'},
+                           55: {'label': '55°C'},
+                           60: {'label': '60°C'},
+                       }, value=SETPOINT__degC, id="setpoint_slider"),
             html.P(),
             dbc.Label("Max total instantaneous power", color="light"),
             dcc.Slider(2000, 10000, step=2000,

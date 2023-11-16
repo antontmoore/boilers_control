@@ -76,8 +76,8 @@ class NaiiveController(Controller):
 
         for step in range(self.horizon__steps):
             step_consumption__kg = (
-                    horizon_consumption__m3_per_sec[step] * step_size__sec * WATER_DENSITY__kg_per_m3 *
-                    self.number_of_houses
+                horizon_consumption__m3_per_sec[step] * step_size__sec * WATER_DENSITY__kg_per_m3 *
+                self.number_of_houses
             )
 
             still_have_energy__J = min(
@@ -96,11 +96,11 @@ class NaiiveController(Controller):
 
                 idx = np.argmin(current_temperatures__degC)
                 current_temperatures__degC[idx] = (
-                        current_temperatures__degC[idx] +
-                        one_heater_energy__J /
-                        (SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * self.boiler_capacity__m3 * WATER_DENSITY__kg_per_m3) +
-                        step_consumption__kg / self.total_water_mass__kg *
-                        (INCOMING_WATER_TEMPERATURE__degC - current_temperatures__degC[idx])
+                    current_temperatures__degC[idx] +
+                    one_heater_energy__J /
+                    (SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * self.boiler_capacity__m3 * WATER_DENSITY__kg_per_m3) +
+                    step_consumption__kg / self.total_water_mass__kg *
+                    (INCOMING_WATER_TEMPERATURE__degC - current_temperatures__degC[idx])
                 )
 
             mean_temperature__degC = np.mean(current_temperatures__degC)
@@ -134,7 +134,7 @@ class NaiiveController(Controller):
             return 0
 
         min_time_before_growth = 24 * 3600
-        for t_idx in range(water_consumption__m3_per_sec.shape[0]-1):
+        for t_idx in range(water_consumption__m3_per_sec.shape[0] - 1):
             time__sec, value__m3_per_sec = water_consumption__m3_per_sec[t_idx]
             next_value__m3_per_sec = water_consumption__m3_per_sec[t_idx + 1, 1]
 

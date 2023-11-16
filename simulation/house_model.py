@@ -31,8 +31,8 @@ class HouseWithBoiler:
 
         # Estimating the boiler efficiency
         full_heating_energy__J = (
-                SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * self.water_mass__kg *
-                (upper_limit__degC - INCOMING_WATER_TEMPERATURE__degC)
+            SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * self.water_mass__kg *
+            (upper_limit__degC - INCOMING_WATER_TEMPERATURE__degC)
         )
         energy_consumed_full_heat__J = heater_power__W * full_heating_time__sec
 
@@ -55,14 +55,14 @@ class HouseWithBoiler:
 
         power_used_in_step__W = 0
         heat_loss_by_cooling__J = (
-                self.heat_loss_coefficient__W_per_degC * time_step__sec *
-                (self.current_temperature__C - AMBIENT_TEMPERATURE__degC)
+            self.heat_loss_coefficient__W_per_degC * time_step__sec *
+            (self.current_temperature__C - AMBIENT_TEMPERATURE__degC)
         )
 
         heat_loss_by_flow__J = (
-                SPECIFIC_HEAT_CAPACITY__J_per_kg_degC *
-                WATER_DENSITY__kg_per_m3 * out_consumption__m3_per_sec * time_step__sec *
-                (self.current_temperature__C - INCOMING_WATER_TEMPERATURE__degC)
+            SPECIFIC_HEAT_CAPACITY__J_per_kg_degC *
+            WATER_DENSITY__kg_per_m3 * out_consumption__m3_per_sec * time_step__sec *
+            (self.current_temperature__C - INCOMING_WATER_TEMPERATURE__degC)
         )
 
         heat_added_by_boiler__J = 0.
@@ -73,9 +73,9 @@ class HouseWithBoiler:
                 self.time_boiling += 1
 
         self.current_temperature__C += (
-                (heat_added_by_boiler__J - heat_loss_by_cooling__J - heat_loss_by_flow__J) /
-                SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
-                self.water_mass__kg
+            (heat_added_by_boiler__J - heat_loss_by_cooling__J - heat_loss_by_flow__J) /
+            SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
+            self.water_mass__kg
         )
 
         return power_used_in_step__W

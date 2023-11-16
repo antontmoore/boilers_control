@@ -61,8 +61,8 @@ class Controller(ABC):
 
         # coefficient to calculate time needed to increase temperature in one boiler by one degree
         self.temp_to_time__sec_per_degC = (
-                SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * water_mass_in_boiler__kg /
-                (self.heater_power__W * self.model[0].efficiency)
+            SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * water_mass_in_boiler__kg /
+            (self.heater_power__W * self.model[0].efficiency)
         )
 
         self.last_15min_energy__J = CircularBuffer(int(15 * 60 / DEFAULT_TIME_STEP__sec))
@@ -86,7 +86,7 @@ class Controller(ABC):
         [self.model[house_idx].set_current_temperature(start_temperatures__degC[house_idx])
             for house_idx in range(self.number_of_houses)]
 
-        temperature_trends__degC = np.zeros((steps_to_model+1, self.number_of_houses))
+        temperature_trends__degC = np.zeros((steps_to_model + 1, self.number_of_houses))
         temperature_trends__degC[0, :] = start_temperatures__degC
         for step in range(steps_to_model):
             commands = schedule[step, :]
@@ -128,7 +128,6 @@ class Controller(ABC):
         plt.grid(True)
         plt.show()
 
-
     def calc_heat_schedule_from_mean_schedule(
             self,
             mean_schedule: NDArray,
@@ -149,12 +148,11 @@ class Controller(ABC):
         schedule = np.zeros((self.horizon__steps, self.number_of_houses), dtype=bool)
 
         adding_temperature_in_one_step__degC = (
-                self.model[0].heater_power__W * self.model[0].efficiency * step_size__sec /
-                SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
-                (self.model[0].water_mass__kg)
+            self.model[0].heater_power__W * self.model[0].efficiency * step_size__sec /
+            SPECIFIC_HEAT_CAPACITY__J_per_kg_degC /
+            (self.model[0].water_mass__kg)
         )
 
-        ids_and_temps = [(idx, current_temperatures__degC[idx]) for idx in range(self.number_of_houses)]
         temperatures__degC = current_temperatures__degC
         for timestep in range(mean_schedule.shape[0]):
             for j in range(mean_schedule[timestep]):

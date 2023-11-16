@@ -84,8 +84,8 @@ def get_figures(sim_result):
     timestamps__hm = [ts[0] + ':' + ts[1] for ts in timestamps__hm]
 
     fig_temp_dict = dict(zip(["data", "layout", "frames"], [[], {}, []]))
-    fig_temp_dict["data"] = [go.Scatter(x=timestamps__hm, y=sim_result.temperature_trends[:, hn], name="house "+str(hn+1)) for hn in
-                             range(5)]  # [4, 7, 5, 3, 2])
+    fig_temp_dict["data"] = [go.Scatter(x=timestamps__hm, y=sim_result.temperature_trends[:, hn],
+                                        name="house "+str(hn+1)) for hn in range(5)]
     fig_temp_dict["layout"]["margin"] = dict(l=0, r=0, b=1, t=0)
     figure_temperature = go.Figure(fig_temp_dict)
     figure_temperature.update_yaxes(title_text="Temperature, °C")
@@ -173,51 +173,44 @@ def get_settings_panel():
                            1600: {'label': '1.6kW'},
                        }, value=MAXIMUM_15MIN_POWER__W, id="max_avg_power_slider"),
             html.P(),
-            html.Div(
-                dbc.Select(
-                    ["naiive controller", "dynamic programming"],
-                    "naiive controller",
-                    id="controller-select",
-                    class_name="bg-dark text-white",
-                    ),
-            ),
-            html.P(),
             dbc.Label("Control horizon, hours", color="light"),
 
-            dcc.Slider(1, 12, step=1,
+            dcc.Slider(4, 24, step=4,
                        marks={
-                           1: {'label': '1'},
-                           4: {'label': '4'},
-                           8: {'label': '8'},
-                           12: {'label': '12'},
+                           4: {'label': '4h'},
+                           8: {'label': '8h'},
+                           12: {'label': '12h'},
+                           16: {'label': '16h'},
+                           20: {'label': '20h'},
+                           24: {'label': '24h'},
                        }, value=int(DEFAULT_CONTROL_HORIZON__sec / 3600),
                        id="horizon_slider"),
-            # dbc.Input(placeholder="Horizon in hours...", value=int(DEFAULT_CONTROL_HORIZON__sec/3600), valid=None,
-            #           id="horizon_setting"),
             html.P(),
-            # dbc.Label("Time step, sec", color="light"),
-            # dbc.Input(placeholder="Timestep in sec...", value=DEFAULT_TIME_STEP__sec, valid=None),
-            # html.P(),
             dbc.Label("Start temperatures, °C", color="light"),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 1"),
-                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house1_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC,
+                           id="house1_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 2"),
-                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house2_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC,
+                           id="house2_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 3"),
-                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house3_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC,
+                           id="house3_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 4"),
-                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house4_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC,
+                           id="house4_temperature")], className="mb-3",
             ),
             dbc.InputGroup(
                 [dbc.InputGroupText("house 5"),
-                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC, id="house5_temperature")], className="mb-3",
+                 dbc.Input(placeholder="Temperature in °C...", value=DEFAULT_START_TEMPERATURE__degC,
+                           id="house5_temperature")], className="mb-3",
             ),
         ]
     )
@@ -237,6 +230,20 @@ def get_settings_panel():
         ]
     )
     return settings_panel
+
+
+controller_select = html.Div(
+    [
+        dbc.Select(
+            ["naiive controller", "dynamic programming"],
+            "naiive controller",
+            id="controller-select",
+            class_name="bg-dark text-white"
+        ),
+        html.P()
+    ]
+)
+
 
 # first simulation is done with deafult settings
 step_size__sec = DEFAULT_TIME_STEP__sec
@@ -286,6 +293,7 @@ app.layout = dbc.Container(
             dbc.Col([
                 buttons,
                 html.Br(),
+                controller_select,
                 results_table_fade,
                 settings_panel,
             ],  width=2),
@@ -307,8 +315,8 @@ app.layout = dbc.Container(
 
 @app.callback(
     Output("settings_collapse", "is_open"),
-    [Input("settings_button", "n_clicks")],
-    [State("settings_collapse", "is_open")],
+    Input("settings_button", "n_clicks"),
+    State("settings_collapse", "is_open"),
 )
 def toggle_collapse(n, is_open):
     if n:

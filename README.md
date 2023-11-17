@@ -1,3 +1,5 @@
+![Unit Tests and Linter](https://github.com/antontmoore/boilers_control/actions/workflows/python-app.yml/badge.svg)
+
 Test Task for ampX.
 
 

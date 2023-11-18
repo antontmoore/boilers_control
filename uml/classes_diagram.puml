@@ -1,0 +1,50 @@
+```plantuml
+@startuml
+
+package controller{
+    abstract Controller{
+        + number_of_houses: int
+        + horizon_time__sec: int
+        + setpoint__degC: float
+        + heater_power__W: float
+        + boiler_capacity__m3: float
+        + max_instantaneous_power__W: float
+        + max_15min_power__W: float
+        + NDArray generate_control(start_temperatures__degC: NDArray, current_time__sec: int, step_size__sec: int
+        + NDArray calc_heat_schedule_from_mean_schedule(mean_schedule: NDArray, current_temperatures__degC: NDArray, step_size__sec: int)
+        + NDArray simulate_schedule(start_temperatures__degC: NDArray, schedule: NDArray, step_size__sec: int)
+    }
+
+    class AlwaysOnController
+    class NaiiveController
+    class DynamicProgramingController
+
+    Controller <|-- AlwaysOnController
+    Controller <|-- NaiiveController
+    Controller <|-- DynamicProgramingController
+}
+
+package simulation{
+    class HouseWithBoiler{
+         + setpoint__degC: float
+         + upper_limit__degC: float
+         + heater_power__W: float
+         + boiler_capacity__m3: float
+         + full_heating_time__sec: float
+         + heat_loss_coefficient__W_per_degC: float
+         + boiler_control_tolerance__degC: float
+         + efficiency: float
+    }
+
+    class Simulator{
+        + number_of_houses: int
+        + real_houses: List[HouseWithBoiler]
+        + SimulationResults simulate_day(controller: Controller, setpoint__degC: float, timestep__sec: int, period__sec: int, start_temperatures__degC: NDArray)
+    }
+
+    Simulator *-l- HouseWithBoiler : +real_houses
+
+}
+
+@enduml
+```

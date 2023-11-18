@@ -194,7 +194,7 @@ class DynamicProgramingController(Controller):
         return schedule
 
     def calc_heat_schedule(self,
-                           mean_schedule,
+                           mean_schedule: NDArray,
                            temperatures__degC: NDArray,
                            step_size__sec: int,
                            ):

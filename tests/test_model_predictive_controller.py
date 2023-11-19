@@ -1,11 +1,11 @@
-from controller.dynamic_programing import DynamicProgramingController
+from controller.model_predictive_controller import ModelPredictiveController
 import numpy as np
 import pytest
 
 test_data = [
-    (8 * 3600, 22 * 3600, 60,  np.array([47., 42., 46., 44., 52.]),    np.array([19, 32, 22, 28,  4])),
-    (12 * 3600, 8 * 3600, 60,  np.array([41., 42., 43., 44., 45.]),    np.array([49, 48, 44, 41, 38])),
-    (14 * 3600, 6 * 3600, 300, np.array([54., 55., 55., 55., 55.]),   np.array([18, 18, 18, 17, 17]))
+    (8 * 3600, 22 * 3600, 60,  np.array([47., 42., 46., 44., 52.]),    np.array([25, 37, 28, 34, 10])),
+    (12 * 3600, 9 * 3600, 60,  np.array([41., 42., 43., 44., 45.]),    np.array([41, 40, 37, 34, 31])),
+    (14 * 3600, 6 * 3600, 300, np.array([54., 55., 55., 55., 55.]),   np.array([1, 0, 0, 0, 0]))
 ]
 
 
@@ -19,8 +19,8 @@ def test_dynamic_programming_controller(
         schedule_sum
 ):
 
-    dpc = DynamicProgramingController(horizon_time__sec=horizon_time__sec)
-    schedule = dpc.generate_control(
+    mpc = ModelPredictiveController(horizon_time__sec=horizon_time__sec)
+    schedule = mpc.generate_control(
         start_temperatures__degC=start_temperatures__degC,
         current_time__sec=current_time__sec,
         step_size__sec=step_size__sec

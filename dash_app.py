@@ -4,9 +4,10 @@ import numpy as np
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from simulation.simulator import Simulator
+from controller.always_on import AlwaysOnController
 from controller.naiive_controller import NaiiveController
 from controller.dynamic_programing import DynamicProgramingController
-from controller.always_on import AlwaysOnController
+from controller.model_predictive_controller import ModelPredictiveController
 from simulation.simulator import SimulationResults
 from constants import J_in_kWh
 from constants import SETPOINT__degC
@@ -235,7 +236,7 @@ def get_settings_panel():
 controller_select = html.Div(
     [
         dbc.Select(
-            ["naiive controller", "dynamic programming"],
+            ["naiive controller", "dynamic programming", "model predictive"],
             "naiive controller",
             id="controller-select",
             class_name="bg-dark text-white"
@@ -373,8 +374,15 @@ def change_general_settings(
             max_instantaneous_power__W=max_instantaneous_power__W,
             max_15min_power__W=max_15min_power__W
         )
-    else:
+    elif controller_name == "dynamic programming":
         controller = DynamicProgramingController(
+            horizon_time__sec=horizon__sec,
+            setpoint__degC=setpoint__degC,
+            max_instantaneous_power__W=max_instantaneous_power__W,
+            max_15min_power__W=max_15min_power__W
+        )
+    else:
+        controller = ModelPredictiveController(
             horizon_time__sec=horizon__sec,
             setpoint__degC=setpoint__degC,
             max_instantaneous_power__W=max_instantaneous_power__W,

@@ -28,7 +28,7 @@ DEFAULT_CONTROL_HORIZON__sec = 12 * 3600
 DEFAULT_SIMULATION_PERIOD__sec = 3600
 
 # full time for boiler to heat from incoming water temperature to set point
-DEFAULT_FULL_HEATING_TIME__sec = 2 * 3600 + 30 * 60
+DEFAULT_FULL_HEATING_TIME__sec = 2 * 3600 + 2 * 60
 
 # water temperature coming inside boiler to be heated
 INCOMING_WATER_TEMPERATURE__degC = 20.
@@ -41,6 +41,12 @@ WATER_DENSITY__kg_per_m3 = 1000.
 
 # time step for controller
 DEFAULT_TIME_STEP__sec = 60
+
+# coefficients to calculate J-functional (metrics) in dp controller
+CONTROLLER_COEFFICIENTS_DP = {"temp_diff": 3., "consumption": 1.2, "cost": 1.}
+
+# coefficients to calculate J-functional (metrics) in mpc controller
+CONTROLLER_COEFFICIENTS_MPC = {"temp_diff": 0.4, "consumption": 1., "cost": 15.}
 
 # threshold for consumption surge detection
 SURGE_CONSUMPTION_THRESHOLD__M_PER_SEC = 1e-8

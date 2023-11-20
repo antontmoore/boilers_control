@@ -19,25 +19,15 @@ from constants import DEFAULT_START_TEMPERATURE__degC
 from constants import DEFAULT_TIME_STEP__sec
 import datetime
 
-# stylesheet with the .dbc class to style  dcc, DataTable and AG Grid components with a Bootstrap theme
+# themes for dash application
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 template = "slate_dark"
 load_figure_template(template)
 
+# creating the app
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc.icons.FONT_AWESOME, dbc_css])
 
-
-header = html.H4(
-    "Microgrid Controller Test Environment", className="bg-success text-white p-2 mb-2 text-center"
-)
-
-buttons = html.Div(
-    [
-        dbc.Button("   ▶   ", size="lg", className="me-1"),
-        dbc.Button("↺", size="sm", color="secondary"),
-    ]
-)
-
+# Below are the functions to create some parts of application layouts
 
 def get_results_table(sim_result: SimulationResults,
                       always_on_result: SimulationResults):
@@ -90,7 +80,7 @@ def get_figures(sim_result):
     fig_temp_dict["layout"]["margin"] = dict(l=0, r=0, b=1, t=0)
     figure_temperature = go.Figure(fig_temp_dict)
     figure_temperature.update_yaxes(title_text="Temperature, °C")
-    figure_temperature.update_layout(template=template, legend=dict(x=1, y=0, xanchor='right', yanchor='bottom'))
+    figure_temperature.update_layout(template=template, legend=dict(x=1, y=0.95, xanchor='right', yanchor='top'))
 
     figure_temperature.add_vrect(x0=6 * 3600 / step_size__sec, x1=9 * 3600 / step_size__sec,
                                  fillcolor="darkslateblue", opacity=0.2, layer="below", line_width=0,
@@ -232,6 +222,17 @@ def get_settings_panel():
     )
     return settings_panel
 
+# application header
+header = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(dbc.NavLink("GitHub", href="https://github.com/antontmoore/boilers_control")),
+        ],
+    brand="Microgrid Controller Test Environment",
+    color="primary",
+    brand_style={"color": "white"},
+    dark=True,
+)
+
 
 controller_select = html.Div(
     [
@@ -292,7 +293,6 @@ app.layout = dbc.Container(
         header,
         dbc.Row([
             dbc.Col([
-                buttons,
                 html.Br(),
                 controller_select,
                 results_table_fade,

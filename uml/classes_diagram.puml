@@ -35,6 +35,8 @@ package simulation{
          + heat_loss_coefficient__W_per_degC: float
          + boiler_control_tolerance__degC: float
          + efficiency: float
+         + float get_current_temperature()
+         + set_current_temperature(temperature_value__degC: float)
     }
 
     class Simulator{

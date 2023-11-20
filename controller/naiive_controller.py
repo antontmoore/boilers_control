@@ -6,7 +6,6 @@ from constants import SPECIFIC_HEAT_CAPACITY__J_per_kg_degC
 from constants import SETPOINT__degC
 from constants import DEFAULT_HEATER_POWER__W
 from constants import DEFAULT_BOILER_CAPACITY__m3
-from constants import SURGE_CONSUMPTION_THRESHOLD__M_PER_SEC
 from constants import DEFAULT_TIME_STEP__sec
 from constants import DEFAULT_CONTROL_HORIZON__sec
 from constants import WATER_DENSITY__kg_per_m3

@@ -9,6 +9,10 @@ from math import ceil
 
 
 class SimulationResults:
+    """
+        Class of simulation results.
+        This class is returned by Simulator.simulate_day() and used for plotting inside test environment.
+    """
     temperature_trends: NDArray
     power_trend: NDArray
     avg_power_trend: NDArray
@@ -27,6 +31,10 @@ class SimulationResults:
 
 
 class Simulator:
+    """
+        Class for quick simulation.
+        Recieves controller, create models of houses with boilers and simulate one full day, given starting conditions.
+    """
     def __init__(self,
                  number_of_houses: int = 5):
         self.number_of_houses = number_of_houses
@@ -37,7 +45,7 @@ class Simulator:
                      setpoint__degC: float,
                      timestep__sec: int,
                      period__sec: int,
-                     start_temperatures__degC: NDArray):
+                     start_temperatures__degC: NDArray) -> SimulationResults:
 
         # creating the model of real houses
         self.real_houses = [HouseWithBoiler(setpoint__degC=setpoint__degC)
@@ -94,5 +102,4 @@ class Simulator:
 
         result.total_costs__usd = np.sum(result.cost_trend)
         result.total_energy__J = np.sum(result.power_trend) * timestep__sec
-        print('------ simulation is done -------')
         return result

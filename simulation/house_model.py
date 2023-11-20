@@ -12,6 +12,9 @@ from constants import SETPOINT__degC
 
 
 class HouseWithBoiler:
+    """
+        Class for simulation model of house with boiler.
+    """
     def __init__(self,
                  setpoint__degC: float = SETPOINT__degC,
                  upper_limit__degC: float = 60.,
@@ -39,18 +42,19 @@ class HouseWithBoiler:
         self.efficiency = full_heating_energy__J / energy_consumed_full_heat__J
 
         self.current_temperature__C = AMBIENT_TEMPERATURE__degC
-        self.time_boiling = 0
 
     def make_step(self,
                   out_consumption__m3_per_sec: Union[float, NDArray] = 0.,
                   boiler_is_on: bool = False,
-                  time_step__sec: int = DEFAULT_TIME_STEP__sec):
+                  time_step__sec: int = DEFAULT_TIME_STEP__sec) -> float:
         """
             Function to make one step in time and calculate new current temperature.
 
-            :param out_consumption__m3_per_sec:   volume flow of water used
-            :param boiler_is_on:                  flag, is the boiler on
-            :return:                              None
+            :param    out_consumption__m3_per_sec     volume flow of water used
+            :param    boiler_is_on                    flag, is the boiler on
+            :param    time_step__sec                  timestep durztion in sec
+
+            :return:  power_used_in_step__W           power used during the simulated step
         """
 
         power_used_in_step__W = 0
@@ -70,7 +74,6 @@ class HouseWithBoiler:
             if self.current_temperature__C < self.setpoint__degC - self.boiler_control_tolerance__degC:
                 heat_added_by_boiler__J = self.heater_power__W * time_step__sec * self.efficiency
                 power_used_in_step__W = self.heater_power__W
-                self.time_boiling += 1
 
         self.current_temperature__C += (
             (heat_added_by_boiler__J - heat_loss_by_cooling__J - heat_loss_by_flow__J) /
@@ -80,90 +83,9 @@ class HouseWithBoiler:
 
         return power_used_in_step__W
 
-    def simulate_day(self,
-                     timetable,
-                     daily_consumption__m3_per_sec):
-        """
-            Function for one day simulation, calculating the temperature inside boiler step-by-step.
-
-            :param   timetable:                         control action for every time step during the day
-            :param   daily_consumption__m3_per_sec:     water consumption for every time step during the day
-            :return: temperature_ts                     time series of temperature calculated with given action
-        """
-
-        temperature_ts = []
-        current_time = 0
-        for j in range(daily_consumption__m3_per_sec.shape[0]):
-            boil = bool(timetable[j])
-            water_consumption__m3_per_sec = daily_consumption__m3_per_sec[j]
-            self.make_step(water_consumption__m3_per_sec, boil, DEFAULT_TIME_STEP__sec)
-            temperature_ts.append(self.current_temperature__C)
-            current_time += DEFAULT_TIME_STEP__sec
-
-        return temperature_ts
-
     def set_current_temperature(self,
-                                temperature_value__degC):
+                                temperature_value__degC: float):
         self.current_temperature__C = temperature_value__degC
 
-    def get_current_temperature(self):
+    def get_current_temperature(self) -> float:
         return self.current_temperature__C
-
-
-def calc_avg_consumption_and_price(timestep__sec):
-
-    number_of_timestamps = int(86400 / timestep__sec + 1)
-    avg_consumption__m3_per_sec = np.zeros((number_of_timestamps,))
-    current_time_sec = 0
-    idx = 0
-    while current_time_sec <= 86400:
-        if (
-                7 * 3600 <= current_time_sec <= 8 * 3600 or
-                17 * 3600 <= current_time_sec <= 20 * 3600
-        ):
-            avg_consumption__m3_per_sec[idx] = 0.0115 * 0.001
-
-        current_time_sec += timestep__sec
-        idx += 1
-
-    return avg_consumption__m3_per_sec
-
-
-def generate_timetables(timestep__sec):
-    number_of_timestamps = int(86400 / timestep__sec + 1)
-    timetable = np.zeros((number_of_timestamps,))
-    current_time_sec = 0
-    idx = 0
-    while current_time_sec <= 86400:
-        if (
-                4 * 3600 <= current_time_sec <= 9 * 3600 or
-                15 * 3600 <= current_time_sec <= 20.1 * 3600
-        ):
-            timetable[idx] = 1
-        current_time_sec += timestep__sec
-        idx += 1
-
-    return timetable
-
-
-avg_consumption__m3_per_sec = calc_avg_consumption_and_price(DEFAULT_TIME_STEP__sec)
-timetable = generate_timetables(DEFAULT_TIME_STEP__sec)
-
-
-if __name__ == "__main__":
-    hwb = HouseWithBoiler()
-    temperature_ts = hwb.simulate_day(timetable,
-                                      avg_consumption__m3_per_sec)
-
-    fig, ax = plt.subplots()
-    x_plot = np.linspace(0, 24., len(temperature_ts))
-
-    x_timetable = x_plot[timetable == 1]
-    plt.plot(x_timetable, 50 * np.ones_like(x_timetable), 'oc')
-
-    x_consumption = x_plot[avg_consumption__m3_per_sec > 0]
-    plt.plot(x_consumption, 45 * np.ones_like(x_consumption), 'og')
-
-    plt.plot(x_plot, temperature_ts, '-')
-    plt.grid(True)
-    plt.show()

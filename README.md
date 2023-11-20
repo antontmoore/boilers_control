@@ -17,17 +17,17 @@ A separate model has been created for each house, which takes into account:
 ## 2. Ways of solution
 Several controllers have been created, each of which satisfies the given constraints.
 
-#### 2.1 Always-on controller
+#### 🔥 Always-on controller
 All boilers are always on. Used as a baseline to estimate savings in money and electricity.
 
-#### 2.2 Naiive  controller
+#### 💰 Naiive  controller
 
 Uses a greedy strategy, turns on all boilers alternately, while satisfying all existing restrictions. Does not use electricity price information. 
 
-#### 2.3 Dynamic programming
+#### 🚀 Dynamic programming
 The problem of dynamic programming is solved. Each time the controller is called, optimal control is generated for a predetermined horizon. In this case, the entire horizon is divided into 15-minute periods, which are then interpolated.
 
-#### 2.4 Model predictive control
+#### 🤖 Model predictive control
 Similar to dynamic programming, it has a horizon for which it tries to solve the optimal control problem. By varying two variables (start and end times of heating) minimizes the optimized metric.
 
 #### Metrics

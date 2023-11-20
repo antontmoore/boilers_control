@@ -19,9 +19,9 @@ from .utils import CircularBuffer
 class NaiiveController(Controller):
     """
         Naiive controller.
-        Calculate aprroximate time needed to go to setpoint.
-        Splits work periods into pieces for each house.
-        It boils only before consumption starts.
+        Implements greedy strategy while satisfying the energy constraints.
+        It goes through timesteps, and if we still have enough unused energy
+        switches on the boiler with the lowest temperature.
     """
 
     def __init__(self,
@@ -112,39 +112,3 @@ class NaiiveController(Controller):
                                                               step_size__sec)
 
         return schedule
-
-    @staticmethod
-    def calc_time_left_to_flow_growth(current_time__sec: int) -> int:
-        """
-            Calculates time left before water consumption.
-            If water is consumed now, returns 0.
-
-            :param current_time__sec: current time from 00:00 in seconds
-
-            :return: time_before_water_consumption
-        """
-
-        current_flow__m3_per_sec = np.interp(
-            current_time__sec,
-            water_consumption__m3_per_sec[:, 0],
-            water_consumption__m3_per_sec[:, 1]
-        )
-
-        if current_flow__m3_per_sec > SURGE_CONSUMPTION_THRESHOLD__M_PER_SEC:
-            return 0
-
-        min_time_before_growth = 24 * 3600
-        for t_idx in range(water_consumption__m3_per_sec.shape[0] - 1):
-            time__sec, value__m3_per_sec = water_consumption__m3_per_sec[t_idx]
-            next_value__m3_per_sec = water_consumption__m3_per_sec[t_idx + 1, 1]
-
-            if value__m3_per_sec < SURGE_CONSUMPTION_THRESHOLD__M_PER_SEC < next_value__m3_per_sec:
-                # growth in flow
-
-                if current_time__sec < time__sec:
-                    time_before_this_growth = time__sec - current_time__sec
-                else:
-                    time_before_this_growth = time__sec + (24 * 3600 - current_time__sec)
-                min_time_before_growth = min(min_time_before_growth, time_before_this_growth)
-
-        return int(min_time_before_growth)

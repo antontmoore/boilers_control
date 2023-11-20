@@ -9,6 +9,8 @@ from constants import DEFAULT_BOILER_CAPACITY__m3
 from constants import INCOMING_WATER_TEMPERATURE__degC
 from constants import WATER_DENSITY__kg_per_m3
 from constants import DEFAULT_TIME_STEP__sec
+from constants import CONTROLLER_COEFFICIENTS_DP
+from constants import PERIOD_15MIN__sec
 from constants import water_consumption__m3_per_sec
 from constants import energy_price__usd_per_J
 from numpy.typing import NDArray
@@ -42,6 +44,7 @@ class DynamicProgramingController(Controller):
                          max_15min_power__W)
         self.horizon_steps = int(self.horizon_time__sec / DEFAULT_TIME_STEP__sec)
         self.horizon_periods = int(self.horizon_time__sec / 15 / 60)
+        self.j_coefficients = CONTROLLER_COEFFICIENTS_DP
 
     def generate_control(self,
                          start_temperatures__degC: NDArray,
@@ -58,56 +61,24 @@ class DynamicProgramingController(Controller):
             :return: control                      control actions for all houses       [horizon_steps, number_of_houses]
         """
 
-        period_15min__sec = 15 * 60
         self.horizon_steps = int(self.horizon_time__sec / step_size__sec)
-        self.horizon_periods = int(self.horizon_time__sec / period_15min__sec)
-        steps_inside_period = int(period_15min__sec / step_size__sec)
+        self.horizon_periods = int(self.horizon_time__sec / PERIOD_15MIN__sec)
+        steps_inside_period = int(PERIOD_15MIN__sec / step_size__sec)
 
         one_step_heater_energy__J = self.heater_power__W * self.model[0].efficiency * step_size__sec
 
-        def get_allowable_control():
-            """
-                Function calculating max control steps inside 15 min period.
-                Needed to calculate how many step_sizes and how many boilers we can switch on inside 15 min period.
-            """
-
-            max_heaters_in_step = int(self.max_instantaneous_power__W / self.heater_power__W)
-
-            max_control_steps = min(
-                int(self.max_15min_power__W * steps_inside_period / self.heater_power__W),
-                max_heaters_in_step * steps_inside_period
-            )
-            return max_control_steps
-
-        def interpolate_to_horizon(x, y):
-            """
-                Function to interpolate water consumption and energy price for control horizon.
-
-                :param x: array of timestamps, corresponding to values
-                :param y: array of values
-                :return: array of values corresponfing to every 15 min period inside horizon
-            """
-
-            x = np.hstack((x, x + 24 * 3600))
-            y = np.hstack((y, y))
-            timestamps__sec = np.linspace(0, self.horizon_time__sec, self.horizon_time__sec + 1) + current_time__sec
-            detailed_values = np.interp(timestamps__sec, x, y)
-            result = np.zeros((int(self.horizon_time__sec / period_15min__sec),))
-            for j in range(result.shape[0]):
-                result[j] = np.sum(detailed_values[j * period_15min__sec: (j + 1) * period_15min__sec])
-
-            return result
-
         # allowable control actions are 0 and max power due to constraints
-        max_control_steps_inside_15min = get_allowable_control()
+        max_control_steps_inside_15min = self.get_allowable_control(steps_inside_period)
         allowable_heating_steps = [0, max_control_steps_inside_15min]
 
         # interpolate external data of energy price and water consumption
-        horizon_price__usd_per_J = interpolate_to_horizon(energy_price__usd_per_J[:, 0],
-                                                          energy_price__usd_per_J[:, 1])
+        horizon_price__usd_per_J = self.interpolate_to_horizon(energy_price__usd_per_J[:, 0],
+                                                               energy_price__usd_per_J[:, 1],
+                                                               current_time__sec)
 
-        horizon_consumption__m3 = interpolate_to_horizon(water_consumption__m3_per_sec[:, 0],
-                                                         water_consumption__m3_per_sec[:, 1])
+        horizon_consumption__m3 = self.interpolate_to_horizon(water_consumption__m3_per_sec[:, 0],
+                                                              water_consumption__m3_per_sec[:, 1],
+                                                              current_time__sec)
 
         # dp-table characteristics (steps and boundaries)
         current_mean_temperature__degC = np.mean(start_temperatures__degC)
@@ -127,7 +98,7 @@ class DynamicProgramingController(Controller):
         number_of_temp_steps = ceil((self.setpoint__degC - minimum_temperature__degC) / delta_temp_mean__degC)
         temperature_step__degC = (self.setpoint__degC - minimum_temperature__degC) / (number_of_temp_steps - 1)
 
-        # functions to set correspondings between temperature and row inside dp-table
+        # functions to set correspondence between temperature and row inside dp-table
         def idx_to_temp(idx):
             return minimum_temperature__degC + idx * temperature_step__degC
 
@@ -140,11 +111,6 @@ class DynamicProgramingController(Controller):
 
         came_from = -1 * np.ones((number_of_temp_steps, self.horizon_periods + 1), dtype=int)
         boilers_switched_on = np.zeros((number_of_temp_steps, self.horizon_periods + 1), dtype=int)
-
-        # coefficeints to calc functional J
-        j_coeff_delta_t = 3.
-        j_coeff_cons = 1.2
-        j_coeff_price = 1.
 
         # filling the dp-value
         for col in range(self.horizon_periods):
@@ -159,9 +125,10 @@ class DynamicProgramingController(Controller):
                     # calculate finctional J value
                     j_new = (
                         dp_value[row, col] +
-                        j_coeff_price * price * heating__J +
-                        j_coeff_delta_t * (self.setpoint__degC - this_temperature__degC) +
-                        j_coeff_cons * consumption__kg * (self.setpoint__degC - this_temperature__degC)
+                        self.j_coefficients["cost"] * price * heating__J +
+                        self.j_coefficients["temp_diff"] * (self.setpoint__degC - this_temperature__degC) +
+                        self.j_coefficients["consumption"] * consumption__kg *
+                        (self.setpoint__degC - this_temperature__degC)
                     )
 
                     # new temperature and new row inside table
@@ -189,15 +156,17 @@ class DynamicProgramingController(Controller):
             idx = came_from[idx, col]
 
         # refining heat schedule from 15min period to step_size scale
-        schedule = self.calc_heat_schedule(heating_mean_schedule[1:], start_temperatures__degC, step_size__sec)
+        schedule = self.calc_heat_schedule_from_15min_periods(heating_mean_schedule[1:],
+                                                              start_temperatures__degC,
+                                                              step_size__sec)
 
         return schedule
 
-    def calc_heat_schedule(self,
-                           mean_schedule: NDArray,
-                           temperatures__degC: NDArray,
-                           step_size__sec: int,
-                           ):
+    def calc_heat_schedule_from_15min_periods(self,
+                                              mean_schedule: NDArray,
+                                              temperatures__degC: NDArray,
+                                              step_size__sec: int,
+                                              ) -> NDArray:
         """
             Function calculate refined heat schedule from general 15min periods' schedule.
             It receives mean_schedule - the number of boilers switched on during every 15min period
@@ -233,3 +202,41 @@ class DynamicProgramingController(Controller):
             schedule = np.vstack((schedule, period_schedule))
 
         return schedule
+
+    def interpolate_to_horizon(self,
+                               x: NDArray,
+                               y: NDArray,
+                               current_time__sec: int) -> NDArray:
+        """
+            Function to interpolate water consumption and energy price for control horizon.
+
+            :param x:                   array of timestamps, corresponding to values
+            :param y:                   array of values
+            :param current_time__sec:   current time from 00:00 in seconds
+
+            :return: array of values corresponding to every 15 min period inside horizon
+        """
+
+        x = np.hstack((x, x + 24 * 3600))
+        y = np.hstack((y, y))
+        timestamps__sec = np.linspace(0, self.horizon_time__sec, self.horizon_time__sec + 1) + current_time__sec
+        detailed_values = np.interp(timestamps__sec, x, y)
+        result = np.zeros((int(self.horizon_time__sec / PERIOD_15MIN__sec),))
+        for j in range(result.shape[0]):
+            result[j] = np.sum(detailed_values[j * PERIOD_15MIN__sec: (j + 1) * PERIOD_15MIN__sec])
+
+        return result
+
+    def get_allowable_control(self, steps_inside_period: int) -> float:
+        """
+            Function calculating max control steps inside 15 min period.
+            Needed to calculate how many step_sizes and how many boilers we can switch on inside 15 min period.
+        """
+
+        max_heaters_in_step = int(self.max_instantaneous_power__W / self.heater_power__W)
+
+        max_control_steps = min(
+            int(self.max_15min_power__W * steps_inside_period / self.heater_power__W),
+            max_heaters_in_step * steps_inside_period
+        )
+        return max_control_steps

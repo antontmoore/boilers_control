@@ -48,8 +48,8 @@ CONTROLLER_COEFFICIENTS_DP = {"temp_diff": 3., "consumption": 1.2, "cost": 1.}
 # coefficients to calculate J-functional (metrics) in mpc controller
 CONTROLLER_COEFFICIENTS_MPC = {"temp_diff": 0.4, "consumption": 1., "cost": 15.}
 
-# threshold for consumption surge detection
-SURGE_CONSUMPTION_THRESHOLD__M_PER_SEC = 1e-8
+# 15 minute period in seconds
+PERIOD_15MIN__sec = 15 * 60
 
 # given consumption of water by one house [time in sec from 00:00, consumption in m3/sec]
 water_consumption__m3_per_sec = np.array([[0,         0.],

@@ -1,7 +1,6 @@
 from abc import ABC
 import numpy as np
 from numpy.typing import NDArray
-import matplotlib.pyplot as plt
 from simulation.house_model import HouseWithBoiler
 from .utils import CircularBuffer
 from constants import MAXIMUM_INSTANTANEOUS_POWER__W
@@ -12,7 +11,6 @@ from constants import DEFAULT_TIME_STEP__sec
 from constants import DEFAULT_CONTROL_HORIZON__sec
 from constants import DEFAULT_HEATER_POWER__W
 from constants import DEFAULT_BOILER_CAPACITY__m3
-from constants import WATER_DENSITY__kg_per_m3
 
 
 class Controller(ABC):
@@ -56,48 +54,7 @@ class Controller(ABC):
         # water mass in all boilers
         self.total_water_mass__kg = sum([m.water_mass__kg for m in self.model])
 
-        # water mass in one boiler
-        water_mass_in_boiler__kg = self.boiler_capacity__m3 * WATER_DENSITY__kg_per_m3
-
-        # coefficient to calculate time needed to increase temperature in one boiler by one degree
-        self.temp_to_time__sec_per_degC = (
-            SPECIFIC_HEAT_CAPACITY__J_per_kg_degC * water_mass_in_boiler__kg /
-            (self.heater_power__W * self.model[0].efficiency)
-        )
-
         self.last_15min_energy__J = CircularBuffer(int(15 * 60 / DEFAULT_TIME_STEP__sec))
-
-    def simulate_schedule(self,
-                          start_temperatures__degC: NDArray,
-                          schedule: NDArray,
-                          step_size__sec: int):
-        """
-            Function simulate the given schedule, starting with given start_temperatures
-
-            :param start_temperatures__degC:  water temperature in boilers          [number_of_houses]
-            :param schedule:                  flags to switch boiler on or not      [number_of_steps, number_of_houses]
-            :param step_size__sec:            duration of one time step
-
-            :return:                          simulated temperature trends          [number_of_steps, number_of_houses]
-        """
-
-        steps_to_model = schedule.shape[0]
-
-        [self.model[house_idx].set_current_temperature(start_temperatures__degC[house_idx])
-            for house_idx in range(self.number_of_houses)]
-
-        temperature_trends__degC = np.zeros((steps_to_model + 1, self.number_of_houses))
-        temperature_trends__degC[0, :] = start_temperatures__degC
-        for step in range(steps_to_model):
-            commands = schedule[step, :]
-            # commands = np.ones((5,), dtype=bool)
-
-            for house_idx, house in enumerate(self.model):
-                house.make_step(0, commands[house_idx], step_size__sec)
-                temperature_value = house.get_current_temperature()
-                temperature_trends__degC[step + 1, house_idx] = temperature_value
-
-        return temperature_trends__degC
 
     def generate_control(self,
                          start_temperatures__degC: NDArray,
@@ -114,19 +71,6 @@ class Controller(ABC):
             :return: control                      control actions for all houses       [horizon_steps, number_of_houses]
         """
         pass
-
-    @staticmethod
-    def plot_trends(trends: NDArray):
-        """
-            Auxilary method for quick plotting the trends. Needed at debugging.
-
-            :param trends:      values for plotting         [number_of_points, number_of_trends]
-        """
-
-        for idx in range(trends.shape[1]):
-            plt.plot(trends[:, idx])
-        plt.grid(True)
-        plt.show()
 
     def calc_heat_schedule_from_mean_schedule(
             self,

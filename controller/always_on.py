@@ -13,6 +13,7 @@ class AlwaysOnController(Controller):
     """
         AlwaysOn controller.
         The dumbiest controller that always switches on all the boilers.
+        Used as baseline - the one to compare with.
     """
 
     def __init__(self,

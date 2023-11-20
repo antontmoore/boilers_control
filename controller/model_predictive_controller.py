@@ -26,7 +26,7 @@ class ModelPredictiveController(Controller):
         The variational parameters are start and end time of heating inside the horizon.
         The metrics is sum of:
          - difference between mean temperature inside all boilers and setpoint
-         - the coldnest of consumed water
+         - the coldness of consumed water
          - total cost of energy used to heat up water
     """
 
@@ -68,7 +68,7 @@ class ModelPredictiveController(Controller):
         """
 
         def x_to_time(x):
-            """ Function calculate timetamp from x = part of horizon) """
+            """ Function calculate timestamp from x = part of horizon) """
             return x * self.horizon_time__sec + current_time__sec
 
         # parameters according to given step_size

@@ -12,16 +12,17 @@ package controller{
         + max_15min_power__W: float
         + NDArray generate_control(start_temperatures__degC: NDArray, current_time__sec: int, step_size__sec: int
         + NDArray calc_heat_schedule_from_mean_schedule(mean_schedule: NDArray, current_temperatures__degC: NDArray, step_size__sec: int)
-        + NDArray simulate_schedule(start_temperatures__degC: NDArray, schedule: NDArray, step_size__sec: int)
     }
 
     class AlwaysOnController
     class NaiiveController
     class DynamicProgramingController
+    class ModelPredictiveController
 
     Controller <|-- AlwaysOnController
     Controller <|-- NaiiveController
     Controller <|-- DynamicProgramingController
+    Controller <|-- ModelPredictiveController
 }
 
 package simulation{

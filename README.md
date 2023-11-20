@@ -1,6 +1,48 @@
 ![Unit Tests and Linter](https://github.com/antontmoore/boilers_control/actions/workflows/python-app.yml/badge.svg)
 
-Test Task for ampX.
+# Microgrid Controller for 5 houses
 
+This repository is a solution for the AmpX test task.
 
-Boiler parameters were taken from [here](https://www.elcorteingles.pt/electrodomesticos/A38636542-termoacumulador-eletrico-vertical-bosch-tronic4000t-80l-com-capacidade-de-75-litros-branco/?parentCategoryId=5007.20938198024&ref=001004730112192%20&feed=true&gclid=CjwKCAjw1t2pBhAFEiwA_-A-NLDiMl3xqOni0PtN8DmP5gDUK5yvWrWy_ce4ca4ecPN0xE3j_ZAiURoCXIMQAvD_BwE#).
+## The task
+![task](/images/task.png)
+
+## 1. Simulation
+A separate model has been created for each house, which takes into account:
+- increase in temperature due to heating (when the boiler is on)
+- heat loss caused by water consumption
+- the fact that not all consumed energy is converted into heat, i.e. efficiency factor
+- shutdown of the boiler when the set point is reached with a margin
+
+## 2. Ways of solution
+Several controllers have been created, each of which satisfies the given constraints.
+
+#### 2.1 Always-on controller
+All boilers are always on. Used as a baseline to estimate savings in money and electricity.
+
+#### 2.2 Naiive  controller
+
+Uses a greedy strategy, turns on all boilers alternately, while satisfying all existing restrictions. Does not use electricity price information. 
+
+#### 2.3 Dynamic programming
+The problem of dynamic programming is solved. Each time the controller is called, optimal control is generated for a predetermined horizon. In this case, the entire horizon is divided into 15-minute periods, which are then interpolated.
+
+#### 2.4 Model predictive control
+Similar to dynamic programming, it has a horizon for which it tries to solve the optimal control problem. By varying two variables (start and end times of heating) minimizes the optimized metric.
+
+#### Metrics
+
+It is necessary to minimize the electricity bill and at the same time maintain a comfortable temperature. In this regard, the following metric was chosen:
+$$ 
+J = c_{1} \cdot price \cdot E_{consumed} + c_{2} \cdot Q_{water} \cdot (T_{setpoint} - T) + c_{3} \cdot (T_{setpoint} - T)
+$$
+
+where 
+$ E_{consumed} $ - energy consumed by all boilers with current $ price $, $Q_{water}$ - water consumption, $T$ - current temperature, $T_{setpoint}$ - setpoint value of temperature, $c_{1}, c_{2}, c_{3}$ - coefficients.
+
+## 3. Test envorinment
+A special environment for checking and testing controllers has been created.
+
+![test environment](/images/test%20environment.jpg)
+
+To start the testing environment, you simply need to run `python dash_app.py`

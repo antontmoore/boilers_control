@@ -45,3 +45,17 @@ A special environment for checking and testing controllers has been created.
 ![test environment](/images/test%20environment.jpg)
 
 To start the testing environment, you simply need to run `python dash_app.py`
+
+## 4. Results
+Results of simulation for different starting temperatures are in table and graph below.
+
+| Controller  | Avg time to generate control, sec | Total cost, $ |
+| ------------- |:-------------:|:-----:|
+| 🔥 Always on	| __0.0018__	| 50.44 |
+| 💰 Naiive   	| 0.0199	| 6.47 |
+| 🚀 Dynamic programming | 0.0109 | __0.67__ |
+| 🤖 Model predictive | 0.0230 | 1.67 |
+
+![perfomance](/images/perfomance.png)
+
+Looks like the best decision is to use dynamic programming method6 which is quite fast and gives more money economy.

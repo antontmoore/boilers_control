@@ -33,12 +33,11 @@ Similar to dynamic programming, it has a horizon for which it tries to solve the
 #### Metrics
 
 It is necessary to minimize the electricity bill and at the same time maintain a comfortable temperature. In this regard, the following metric was chosen:
-$$ 
-J = c_{1} \cdot price \cdot E_{consumed} + c_{2} \cdot Q_{water} \cdot (T_{setpoint} - T) + c_{3} \cdot (T_{setpoint} - T)
-$$
+
+$$J = c_{1}\cdot price \cdot E_{consumed} + c_{2} \cdot Q_{water} \cdot (T_{setpoint} - T) + c_{3} \cdot (T_{setpoint} - T)$$
 
 where 
-$ E_{consumed} $ - energy consumed by all boilers with current $ price $, $Q_{water}$ - water consumption, $T$ - current temperature, $T_{setpoint}$ - setpoint value of temperature, $c_{1}, c_{2}, c_{3}$ - coefficients.
+$E_{consumed}$ - energy consumed by all boilers with current $price$, $Q_{water}$ - water consumption, $T$ - current temperature, $T_{setpoint}$ - setpoint value of temperature, $c_{1}, c_{2}, c_{3}$ - coefficients.
 
 ## 3. Test envorinment
 A special environment for checking and testing controllers has been created.

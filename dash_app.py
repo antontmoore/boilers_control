@@ -27,8 +27,8 @@ load_figure_template(template)
 # creating the app
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc.icons.FONT_AWESOME, dbc_css])
 
-# Below are the functions to create some parts of application layouts
 
+# Below are the functions to create some parts of application layouts
 def get_results_table(sim_result: SimulationResults,
                       always_on_result: SimulationResults):
     """
@@ -222,11 +222,12 @@ def get_settings_panel():
     )
     return settings_panel
 
+
 # application header
 header = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("GitHub", href="https://github.com/antontmoore/boilers_control")),
-        ],
+    ],
     brand="Microgrid Controller Test Environment",
     color="primary",
     brand_style={"color": "white"},
